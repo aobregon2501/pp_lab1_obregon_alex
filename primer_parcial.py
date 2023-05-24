@@ -3,9 +3,9 @@
 import json 
 
 with open('C:\\Users\\aobre\\OneDrive\\Documentos\\Prog_I_div_E\\Primer parcial\\datosDreamTeam.json') as archivo:
-    data_nba = json.load(archivo)
+    data_dream_team = json.load(archivo)
 
-lista_jugadores = data_nba["jugadores"]
+lista_jugadores = data_dream_team["jugadores"]
 
 def mostrar_jugadores(lista:list):
     '''
@@ -19,7 +19,7 @@ def mostrar_jugadores(lista:list):
 
 while True:
     print("\n--Menú de Ejercicios--",
-          "\n\nListar jugadores.",
+          "\n\n1. Listar jugadores.",
           "\nEj 2.",
           "\nEj 3.",
           "\nEj 4.",
