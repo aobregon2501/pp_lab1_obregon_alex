@@ -43,14 +43,19 @@ def ingresar_float(frase:str):
         else:
             print("Ingreso invalido.")
 
+def mostrar_en_pantalla(texto:str):
+    print(texto)            
+
 #-------
 def mostrar_jugadores(lista:list):
     '''
     Muestra la lista de jugadores con el formato Jugador - Posición.
     Recibe como parametro la lista de jugadores
     '''
+    texto = "\n"
     for jugador in lista:
-        print("{} - {}".format(jugador["nombre"], jugador["posicion"]))
+        texto += "{} - {}\n".format(jugador["nombre"], jugador["posicion"])
+    mostrar_en_pantalla(texto)   
 
 
 
@@ -70,9 +75,6 @@ def mostrar_logros_jugador(lista:list, campo:str):
     return lista_logros            
 
 
-'''def ordenar_posision(lista:list):
-    lista_posiciones = []
-    lista_aux_posicion = []'''
 
 
 def quick_sort(lista:list, campo:str, flag_orden:bool):
@@ -101,39 +103,48 @@ def quick_sort(lista:list, campo:str, flag_orden:bool):
 
 #-------
 
-def seleccionar_jugador(lista:list) -> int:
-    print("id   nombre")
+def seleccionar_jugador(lista:list, campo_a:str) -> int:
+    texto = "id     {0}\n".format(campo_a)
     for id in range(len(lista)):
-        print("{0}  {1}".format(id, lista[id]["nombre"]))  
+        texto += "{0} - {1}\n".format(id, lista[id][campo_a])
+    print(texto)    
     id_jugador = ingresar_int("Seleccione id del jugador: ")
     return id_jugador
   
 
 #-------
 
-def mostrar_estadisticas_jugador(lista:list, indice:int) -> list:
-    lista_est = []
-    for tipo_est, est in lista[indice].items():
-        if type(est) != list:
-            print("{0}: {1}".format(tipo_est, est))
-            lista_est.append(str(est))
-    
-    lista_campos_est = []
-    lista_campos_est.extend(lista[indice].keys())
-    lista_campos_est.remove("logros")
+def mostrar_estadisticas_jugador(lista:list, campo_a:str, campo_b:str) -> list:
+    id_jugador = seleccionar_jugador(lista_jugadores, campo_a)
+    texto = "\n"
+    lista_csv = []
+    if id_jugador < len(lista_jugadores):
+        lista_est = []
+        for tipo_est, est in lista[id_jugador].items():
+            if type(est) != list:
+                if tipo_est != campo_b:
+                    texto += "{0}: {1}\n".format(tipo_est.replace("_", " ").capitalize(), est)
+                lista_est.append(str(est))
+        lista_campos_est = []
+        lista_campos_est.extend(lista[id_jugador].keys())
+        lista_campos_est.remove("logros")
+        lista_csv.append(lista_campos_est)
+        lista_csv.append(lista_est)
+    else:
+        texto += "Id invalido."    
 
-    return lista_est, lista_campos_est    
+    return lista_csv, texto    
 
 #-------
 
-def preparar_csv(lista:list) -> str:
+def preparar_lista_csv(lista:list) -> str:
     return "{0}\n".format(",".join(lista))
 
-def guardar_csv(lista_datos:list, lista_encabezado:list):
-    nombre_archivo = lista_datos[0] + ".csv"
+def guardar_csv(lista_datos:list):
+    nombre_archivo = lista_datos[1][0] + ".csv"
     with open(nombre_archivo,"w") as file:
-        file.write(preparar_csv(lista_encabezado))
-        file.write(preparar_csv(lista_datos))
+        for lista in lista_datos:
+            file.write(preparar_lista_csv(lista))
             
 #--------  
 
@@ -151,17 +162,15 @@ def sumar_logros(lista:list, campo_a:str, campo_b:str):
         dict_logros[campo_a] = jugador[campo_a]
         dict_logros[campo_b] = acumulador_logros
         lista_logros.append(dict_logros) 
-    return lista_logros    
+    buscar_mayor(lista_logros, campo_a, campo_b) 
 
-def buscar_mayor(lista:list, campo_a:str, campo_b:str, flag_orden = True, flag_logro = False):
-    if flag_logro:
-        lista = sumar_logros(lista, campo_a, campo_b)       
+def buscar_mayor(lista:list, campo_a:str, campo_b:str, flag_orden = False):    
     lista_ordenada = quick_sort(lista, campo_b, flag_orden)
     texto = "{0} con {1} {2}.".format(
         lista_ordenada[0][campo_a],
         lista_ordenada[0][campo_b],
         campo_b.replace("_", " "))
-    return texto
+    mostrar_en_pantalla(texto)
     
 
 #----------
@@ -185,10 +194,10 @@ def listar_mayores(lista:list, campo_a:str, campo_b:str):
     if len(lista_mayores) > 0:
         for jugador in lista_mayores:
             texto += "{0}: {1}\n".format(jugador[campo_a], jugador[campo_b])
-        return texto    
+        mostrar_en_pantalla(texto)    
     else:
         texto = "\nNingún jugador supero ese valor."
-        return texto     
+        mostrar_en_pantalla(texto) 
 
 
 #------
@@ -198,10 +207,21 @@ def calcular_promedio(lista:list, campo:str):
     for indice in range(len(lista)):
         acumulador_puntos += lista[indice][campo]
     promedio_puntos = acumulador_puntos / len(lista)
-    print("{0} del equipo: {1}".format(campo.replace("_", " "), promedio_puntos))
+    texto = "\n{0} del equipo: {1}\n".format(campo.replace("_", " ").capitalize(), promedio_puntos)
+    return texto
 
 
-            
+def mostrar_posicion(lista, campo_a:str, campo_b:str, campo_c:str):
+    posicion = lista[0][campo_b]
+    texto = "\n{0}:".format(posicion)
+    for jugador in lista:
+        if posicion == jugador[campo_b]:
+            texto += "\n{0}: {1}".format(jugador[campo_a], jugador[campo_c])
+        else:
+            posicion = jugador[campo_b]
+            texto += "\n{0}:\n{1}: {2}".format(posicion, jugador[campo_a], jugador[campo_c])
+    mostrar_en_pantalla(texto)       
+
     
 
 while True:
@@ -233,86 +253,86 @@ while True:
     
     match opcion:
         case "1":
-            mostrar_jugadores(lista_jugadores)
+            lista_ordenada = quick_sort(lista_jugadores,"posicion", True)
+            mostrar_jugadores(lista_ordenada)
         case "2":
-            indice_jugador = seleccionar_jugador(lista_jugadores)
+            lista_csv, texto = mostrar_estadisticas_jugador(lista_jugadores, "nombre", "posicion")
             flag_csv = True
-            if indice_jugador < len(lista_jugadores):
-                lista_csv, lista_campos = mostrar_estadisticas_jugador(lista_jugadores, indice_jugador)
-            else:
-                print("Id invalido.")    
+            mostrar_en_pantalla(texto)
         case "3":
-           if flag_csv:
-               guardar_csv(lista_csv, lista_campos)
-           else:
-               print("\nNo se mostró ninguna estadística.")   
+            if flag_csv and len(lista_csv) > 0:
+                guardar_csv(lista_csv)
+                texto = "\nDatos guardados en archivo csv."
+            else:
+                texto = "\nNo se mostró ninguna estadística."   
+            mostrar_en_pantalla(texto)     
         case "4":
             lista_logros = mostrar_logros_jugador(lista_jugadores, "nombre")
             if len(lista_logros) > 0:
+                texto = ""
                 for jugador in lista_logros:
-                    print("\n{0}".format(jugador["nombre"]))
+                    texto += "\n\n{0}".format(jugador["nombre"])
                     for logros in range(len(jugador["logros"])):
-                        print("{0}".format(jugador["logros"][logros]))      
+                        texto += "\n{0}".format(jugador["logros"][logros])     
             else:
-                print("\nIngreso invalido.")    
+                texto = "\nIngreso invalido."  
+            mostrar_en_pantalla(texto)     
         case "5":
-            lista_ordenada = quick_sort(lista_jugadores, True, "nombre")
-            calcular_promedio(lista_ordenada, "promedio_puntos_por_partido")
+            lista_ordenada = quick_sort(lista_jugadores,"nombre", True)
+            texto = calcular_promedio(lista_ordenada, "promedio_puntos_por_partido")
             for jugador in lista_ordenada:
-                print("{0}: {1}".format(jugador["nombre"], jugador["promedio_puntos_por_partido"]))
+                texto += "{0}: {1}\n".format(jugador["nombre"], jugador["promedio_puntos_por_partido"])
+            mostrar_en_pantalla(texto)     
         case "6":
             lista_logros = mostrar_logros_jugador(lista_jugadores, "nombre")
             if len(lista_logros) > 0:
+                  texto = "\n"
                   for jugador in lista_logros:
-                      for logro in range(len(jugador["logros"])):
-                          if comparar_patrones(jugador["logros"][logro], "^Miembro del Salon de la Fama del Baloncesto$"):
-                              print("{0} es {1}.".format(jugador["nombre"], jugador["logros"][logro]))
-                              break
+                        if "Miembro del Salon de la Fama del Baloncesto" in jugador["logros"]:
+                            texto += "{0} es Miembro del Salon de la Fama del Baloncesto.\n".format(jugador["nombre"])
+                        else:
+                            texto += "{0} NO es Miembro del Salon de la Fama del Baloncesto.\n".format(jugador["nombre"])      
             else:
-                print("\nIngreso invalido.")
+                texto = "\nIngreso invalido."
+            mostrar_en_pantalla(texto)     
         case "7":
-            texto = buscar_mayor(lista_jugadores,"nombre", "rebotes_totales")
+            buscar_mayor(lista_jugadores,"nombre", "rebotes_totales")
         case "8":
-            texto = buscar_mayor(lista_jugadores,"nombre", "porcentaje_tiros_de_campo")
+            buscar_mayor(lista_jugadores,"nombre", "porcentaje_tiros_de_campo")
         case "9":
-            texto = buscar_mayor(lista_jugadores,"nombre", "asistencias_totales")
+            buscar_mayor(lista_jugadores,"nombre", "asistencias_totales")
         case "10":
-            texto = listar_mayores(lista_jugadores, "nombre", "promedio_puntos_por_partido")
+            listar_mayores(lista_jugadores, "nombre", "promedio_puntos_por_partido")
         case "11":
-            texto = listar_mayores(lista_jugadores, "nombre", "promedio_rebotes_por_partido")
+            listar_mayores(lista_jugadores, "nombre", "promedio_rebotes_por_partido")
         case "12":
-            texto = listar_mayores(lista_jugadores, "nombre", "promedio_asistencias_por_partido")
+            listar_mayores(lista_jugadores, "nombre", "promedio_asistencias_por_partido")
         case "13":
-            texto = buscar_mayor(lista_jugadores,"nombre", "robos_totales")
+           buscar_mayor(lista_jugadores,"nombre", "robos_totales")
         case "14":
-            texto = buscar_mayor(lista_jugadores,"nombre", "bloqueos_totales")
+            buscar_mayor(lista_jugadores,"nombre", "bloqueos_totales")
         case "15":
-            texto = listar_mayores(lista_jugadores, "nombre", "porcentaje_tiros_libres")
+            listar_mayores(lista_jugadores, "nombre", "porcentaje_tiros_libres")
         case "16":
             lista_ordenada = quick_sort(lista_jugadores,"promedio_puntos_por_partido", False)
-            calcular_promedio(lista_ordenada[:-1], "promedio_puntos_por_partido")
+            texto = calcular_promedio(lista_ordenada[:-1], "promedio_puntos_por_partido")
+            mostrar_en_pantalla(texto)
         case "17":
-            texto = buscar_mayor(lista_jugadores,"nombre", "logros", False, True)
+            sumar_logros(lista_jugadores, "nombre", "logros")
         case "18":
-            texto = listar_mayores(lista_jugadores, "nombre", "porcentaje_tiros_triples")
+            listar_mayores(lista_jugadores, "nombre", "porcentaje_tiros_triples")
         case "19":
-            texto = buscar_mayor(lista_jugadores,"nombre", "temporadas")
+            buscar_mayor(lista_jugadores,"nombre", "temporadas")
         case "20":
-            lista_ordenada = quick_sort(lista_jugadores,"posicion", True)
-            lista_mayores = mas_que_el_valor(lista_ordenada, "porcentaje_tiros_de_campo")
+            lista_mayores = mas_que_el_valor(lista_jugadores, "porcentaje_tiros_de_campo")
             if len(lista_mayores) > 0:
-                posicion = lista_mayores[0]["posicion"]
-                print("\n{0}:".format(posicion))
-                for jugador in lista_mayores:
-                    if posicion == jugador["posicion"]:
-                        print("{0}: {1}".format(jugador["nombre"], jugador["porcentaje_tiros_de_campo"]))
-                    else:
-                        posicion = jugador["posicion"]
-                        print("\n{0}:\n{1}: {2}".format(posicion, jugador["nombre"], jugador["porcentaje_tiros_de_campo"]))
+                lista_ordenada = quick_sort(lista_mayores,"posicion", True)
+                texto = mostrar_posicion(lista_ordenada, "nombre", "posicion", "porcentaje_tiros_de_campo")
             else:
-                print("\nNingún jugador superó ese valor.")
+                texto = "\nNingún jugador superó ese valor."
+            mostrar_en_pantalla(texto)     
         case "23":
             pass
         case "0":
             break
-    print(texto)
+    input("...")
