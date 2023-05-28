@@ -35,7 +35,7 @@ def ingresar_int(frase:str):
         else:
             print("Ingreso invalido.")
 
-def ingreso_float(frase:str):            
+def ingresar_float(frase:str):            
     while True:
         numero = input(frase)
         if comparar_patrones(numero, '^([0-9]*)(\.|,*)([0-9]+)$'):
@@ -75,7 +75,7 @@ def mostrar_logros_jugador(lista:list, campo:str):
     lista_aux_posicion = []'''
 
 
-def quick_sort(lista:list, flag_orden:bool, campo:str):
+def quick_sort(lista:list, campo:str, flag_orden:bool):
     lista_de = []
     lista_iz = []
     if len(lista) <= 1:
@@ -93,9 +93,9 @@ def quick_sort(lista:list, flag_orden:bool, campo:str):
                     lista_de.append(dato)
                 else:
                     lista_iz.append(dato)
-    lista_iz = quick_sort(lista_iz, flag_orden, campo)
+    lista_iz = quick_sort(lista_iz,campo, flag_orden)
     lista_iz.append(lista[0])              
-    lista_de = quick_sort(lista_de, flag_orden, campo)
+    lista_de = quick_sort(lista_de,campo, flag_orden)
     lista_iz.extend(lista_de)       
     return lista_iz           
 
@@ -135,41 +135,39 @@ def guardar_csv(lista_datos:list, lista_encabezado:list):
         file.write(preparar_csv(lista_encabezado))
         file.write(preparar_csv(lista_datos))
             
-#--------
+#--------  
 
-def buscar_mayor_estadistica(lista:list, campo:str):
-    dict_est = {}
+def sumar_logros(lista:list, campo_a:str, campo_b:str):
+    lista_logros = []
     for jugador in lista:
-        dict_est[jugador["nombre"]] = jugador[campo]
-    calcular_mayor(dict_est, campo.replace("_", " "))  
-
-def calcular_mayor(dict_est:dict, campo:str):
-    flag_primero = True
-    for nombre, dato in dict_est.items():
-        if flag_primero or dato > mayor:
-            mayor = dato
-            nombre_mayor = nombre
-            flag_primero = False
-    print("{0} con {1} {2}.".format(nombre_mayor, mayor, campo))    
-
-def buscar_mayores_logros(lista:list, campo:str):
-    dict_logros = {}
-    for jugador in lista:
+        dict_logros = {}
         acumulador_logros = 0
-        for logro in jugador[campo]:
+        for logro in jugador[campo_b]:
             if comparar_patrones(logro, "([0-9]+) veces"):
                 numero_str = re.sub(" veces.*", "", logro)
                 acumulador_logros += int(numero_str)
             else:
                 acumulador_logros += 1
-        dict_logros[jugador["nombre"]] = acumulador_logros
-    calcular_mayor(dict_logros, campo)                
+        dict_logros[campo_a] = jugador[campo_a]
+        dict_logros[campo_b] = acumulador_logros
+        lista_logros.append(dict_logros) 
+    return lista_logros    
+
+def buscar_mayor(lista:list, campo_a:str, campo_b:str, flag_orden = True, flag_logro = False):
+    if flag_logro:
+        lista = sumar_logros(lista, campo_a, campo_b)       
+    lista_ordenada = quick_sort(lista, campo_b, flag_orden)
+    texto = "{0} con {1} {2}.".format(
+        lista_ordenada[0][campo_a],
+        lista_ordenada[0][campo_b],
+        campo_b.replace("_", " "))
+    return texto
     
 
 #----------
 
 def mas_que_el_valor(lista:list, campo:str):
-    valor = ingreso_float("Ingrese el valor a superar: ")
+    valor = ingresar_float("Ingrese el valor a superar: ")
 
     lista_mayores = []
 
@@ -180,6 +178,19 @@ def mas_que_el_valor(lista:list, campo:str):
     return lista_mayores  
     
 
+def listar_mayores(lista:list, campo_a:str, campo_b:str):
+    lista_mayores = []
+    lista_mayores = mas_que_el_valor(lista, campo_b)
+    texto = "\n{0}    {1}\n".format(campo_a, campo_b.replace("_", " "))
+    if len(lista_mayores) > 0:
+        for jugador in lista_mayores:
+            texto += "{0}: {1}\n".format(jugador[campo_a], jugador[campo_b])
+        return texto    
+    else:
+        texto = "\nNingún jugador supero ese valor."
+        return texto     
+
+
 #------
 
 def calcular_promedio(lista:list, campo:str):
@@ -188,6 +199,8 @@ def calcular_promedio(lista:list, campo:str):
         acumulador_puntos += lista[indice][campo]
     promedio_puntos = acumulador_puntos / len(lista)
     print("{0} del equipo: {1}".format(campo.replace("_", " "), promedio_puntos))
+
+
             
     
 
@@ -258,34 +271,34 @@ while True:
             else:
                 print("\nIngreso invalido.")
         case "7":
-            buscar_mayor_estadistica(lista_jugadores, "rebotes_totales")
+            texto = buscar_mayor(lista_jugadores,"nombre", "rebotes_totales")
         case "8":
-            buscar_mayor_estadistica(lista_jugadores, "porcentaje_tiros_de_campo")
+            texto = buscar_mayor(lista_jugadores,"nombre", "porcentaje_tiros_de_campo")
         case "9":
-            buscar_mayor_estadistica(lista_jugadores, "asistencias_totales")
+            texto = buscar_mayor(lista_jugadores,"nombre", "asistencias_totales")
         case "10":
-            lista_mayores = mas_que_el_valor(lista_jugadores, "promedio_puntos_por_partido")
+            texto = listar_mayores(lista_jugadores, "nombre", "promedio_puntos_por_partido")
         case "11":
-            lista_mayores = mas_que_el_valor(lista_jugadores, "promedio_rebotes_por_partido")
+            texto = listar_mayores(lista_jugadores, "nombre", "promedio_rebotes_por_partido")
         case "12":
-            lista_mayores = mas_que_el_valor(lista_jugadores, "promedio_asistencias_por_partido")
+            texto = listar_mayores(lista_jugadores, "nombre", "promedio_asistencias_por_partido")
         case "13":
-            buscar_mayor_estadistica(lista_jugadores, "robos_totales")
+            texto = buscar_mayor(lista_jugadores,"nombre", "robos_totales")
         case "14":
-            buscar_mayor_estadistica(lista_jugadores, "bloqueos_totales")
+            texto = buscar_mayor(lista_jugadores,"nombre", "bloqueos_totales")
         case "15":
-            lista_mayores = mas_que_el_valor(lista_jugadores, "porcentaje_tiros_libres")
+            texto = listar_mayores(lista_jugadores, "nombre", "porcentaje_tiros_libres")
         case "16":
-            lista_ordenada = quick_sort(lista_jugadores, False, "promedio_puntos_por_partido")
+            lista_ordenada = quick_sort(lista_jugadores,"promedio_puntos_por_partido", False)
             calcular_promedio(lista_ordenada[:-1], "promedio_puntos_por_partido")
         case "17":
-            buscar_mayores_logros(lista_jugadores, "logros")
+            texto = buscar_mayor(lista_jugadores,"nombre", "logros", False, True)
         case "18":
-            lista_mayores = mas_que_el_valor(lista_jugadores, "porcentaje_tiros_triples")
+            texto = listar_mayores(lista_jugadores, "nombre", "porcentaje_tiros_triples")
         case "19":
-            buscar_mayor_estadistica(lista_jugadores, "temporadas")
+            texto = buscar_mayor(lista_jugadores,"nombre", "temporadas")
         case "20":
-            lista_ordenada = quick_sort(lista_jugadores, True, "posicion")
+            lista_ordenada = quick_sort(lista_jugadores,"posicion", True)
             lista_mayores = mas_que_el_valor(lista_ordenada, "porcentaje_tiros_de_campo")
             if len(lista_mayores) > 0:
                 posicion = lista_mayores[0]["posicion"]
@@ -302,4 +315,4 @@ while True:
             pass
         case "0":
             break
-    #print(resultado)
+    print(texto)
