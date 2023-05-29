@@ -3,6 +3,7 @@
 import json 
 import csv
 import re
+import funciones_parcial as fp
 
 with open('C:\\Users\\aobre\\OneDrive\\Documentos\\Prog_I_div_E\\Primer parcial\\datosDreamTeam.json') as archivo:
     data_dream_team = json.load(archivo)
@@ -17,12 +18,16 @@ print(lista_jugadores)
         
 
 flag_csv = False
+lista_csv = []
+ranking_robos = []
+ranking_rebotes = []
+ranking_asistencias = []
 
 
 #-------
 
 def comparar_patrones(texto:str, patron:str):
-    if re.search(patron, texto):
+    if len(re.findall(patron, texto)) != 0:
         return True
     else:
         return False
@@ -65,7 +70,7 @@ def mostrar_logros_jugador(lista:list, campo:str):
     lista_logros = []
     while len(nombre_ingresado) > 2:
         for jugador in lista:
-            if len(re.findall("^{0}.*| {0}.*".format(nombre_ingresado), jugador[campo].lower())) != 0:
+            if comparar_patrones(jugador[campo].lower(), "^{0}.*| {0}.*".format(nombre_ingresado)):
                 lista_logros.append(jugador)
 
         if len(lista_logros) > 0:
@@ -140,8 +145,8 @@ def mostrar_estadisticas_jugador(lista:list, campo_a:str, campo_b:str) -> list:
 def preparar_lista_csv(lista:list) -> str:
     return "{0}\n".format(",".join(lista))
 
-def guardar_csv(lista_datos:list):
-    nombre_archivo = lista_datos[1][0] + ".csv"
+def guardar_csv(lista_datos:list, nombre_archivo:str):
+    nombre_archivo += ".csv"
     with open(nombre_archivo,"w") as file:
         for lista in lista_datos:
             file.write(preparar_lista_csv(lista))
@@ -162,7 +167,8 @@ def sumar_logros(lista:list, campo_a:str, campo_b:str):
         dict_logros[campo_a] = jugador[campo_a]
         dict_logros[campo_b] = acumulador_logros
         lista_logros.append(dict_logros) 
-    buscar_mayor(lista_logros, campo_a, campo_b) 
+    lista_ordenada = buscar_mayor(lista_logros, campo_a, campo_b) 
+    return lista_ordenada
 
 def buscar_mayor(lista:list, campo_a:str, campo_b:str, flag_orden = False):    
     lista_ordenada = quick_sort(lista, campo_b, flag_orden)
@@ -171,7 +177,7 @@ def buscar_mayor(lista:list, campo_a:str, campo_b:str, flag_orden = False):
         lista_ordenada[0][campo_b],
         campo_b.replace("_", " "))
     mostrar_en_pantalla(texto)
-    
+    return lista_ordenada
 
 #----------
 
@@ -224,6 +230,25 @@ def mostrar_posicion(lista, campo_a:str, campo_b:str, campo_c:str):
 
     
 
+def acoplar_rankings(puntos:list, rebotes:list, asistencias:list, robos:list, lista_encabezado:list):
+    lista_rankings = []
+    lista_rankings.append(lista_encabezado)
+    for indice in range(len(puntos)):
+        lista_auxiliar = []
+        lista_auxiliar.append(puntos[indice][lista_encabezado[0]])
+        lista_auxiliar.append(str(indice + 1))
+        lista_auxiliar.append(buscar_indice(puntos[indice][lista_encabezado[0]], rebotes, lista_encabezado[0]))
+        lista_auxiliar.append(buscar_indice(puntos[indice][lista_encabezado[0]], asistencias, lista_encabezado[0]))
+        lista_auxiliar.append(buscar_indice(puntos[indice][lista_encabezado[0]], robos, lista_encabezado[0]))
+        lista_rankings.append(lista_auxiliar)
+    guardar_csv(lista_rankings, "BONUS")    
+
+
+def buscar_indice(nombre:str, lista:list, campo:str):
+    for indice in range(len(lista)):
+        if nombre == lista[indice][campo]:
+            return str(indice + 1)
+
 while True:
     print("\n--Menú de Ejercicios--",
           "\n\n1. Listar jugadores.",
@@ -256,12 +281,13 @@ while True:
             lista_ordenada = quick_sort(lista_jugadores,"posicion", True)
             mostrar_jugadores(lista_ordenada)
         case "2":
-            lista_csv, texto = mostrar_estadisticas_jugador(lista_jugadores, "nombre", "posicion")
+            lista_estadisticas, texto = mostrar_estadisticas_jugador(lista_jugadores, "nombre", "posicion")
             flag_csv = True
+            lista_csv = lista_estadisticas
             mostrar_en_pantalla(texto)
         case "3":
             if flag_csv and len(lista_csv) > 0:
-                guardar_csv(lista_csv)
+                guardar_csv(lista_csv, lista_csv[1][0])
                 texto = "\nDatos guardados en archivo csv."
             else:
                 texto = "\nNo se mostró ninguna estadística."   
@@ -296,11 +322,11 @@ while True:
                 texto = "\nIngreso invalido."
             mostrar_en_pantalla(texto)     
         case "7":
-            buscar_mayor(lista_jugadores,"nombre", "rebotes_totales")
+            ranking_rebotes = buscar_mayor(lista_jugadores,"nombre", "rebotes_totales")
         case "8":
             buscar_mayor(lista_jugadores,"nombre", "porcentaje_tiros_de_campo")
         case "9":
-            buscar_mayor(lista_jugadores,"nombre", "asistencias_totales")
+            ranking_asistencias = buscar_mayor(lista_jugadores,"nombre", "asistencias_totales")
         case "10":
             listar_mayores(lista_jugadores, "nombre", "promedio_puntos_por_partido")
         case "11":
@@ -308,7 +334,7 @@ while True:
         case "12":
             listar_mayores(lista_jugadores, "nombre", "promedio_asistencias_por_partido")
         case "13":
-           buscar_mayor(lista_jugadores,"nombre", "robos_totales")
+            ranking_robos = buscar_mayor(lista_jugadores,"nombre", "robos_totales")
         case "14":
             buscar_mayor(lista_jugadores,"nombre", "bloqueos_totales")
         case "15":
@@ -332,7 +358,16 @@ while True:
                 texto = "\nNingún jugador superó ese valor."
             mostrar_en_pantalla(texto)     
         case "23":
-            pass
+            ranking_puntos = quick_sort(lista_jugadores, "puntos_totales", False)
+            if ranking_rebotes == list():
+                ranking_rebotes = quick_sort(lista_jugadores, "rebotes_totales", False)
+            if ranking_asistencias == list():
+                ranking_asistencias = quick_sort(lista_jugadores, "asistencias_totales", False)
+            if ranking_robos == list():
+                ranking_robos = quick_sort(lista_jugadores, "robos_totales", False)    
+
+            lista_encabezado = ["nombre", "puntos totales", "rebotes totales", "asistencias totales", "robos totales"]    
+            acoplar_rankings(ranking_puntos, ranking_rebotes, ranking_asistencias, ranking_robos, lista_encabezado)    
         case "0":
             break
     input("...")
