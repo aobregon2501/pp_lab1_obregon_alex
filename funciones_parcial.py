@@ -1,6 +1,8 @@
 import re
 
-def menu_principal() -> str:
+def menu_principal():
+   ''' Imprime el menú principal.'''
+
    print("\n--Menú de Ejercicios--",
         "\n\n1. Listar jugadores.",
         "\n2. Mostrar estadísticas de un jugador.",
@@ -23,6 +25,10 @@ def menu_principal() -> str:
         "\n19. Calcular y mostrar el jugador con la mayor cantidad de temporadas jugadas",
         "\n20. Ingresar un valor y mostrar los jugadores , ordenados por posición en la cancha, que hayan tenido un porcentaje de tiros de campo superior a ese valor.",
         "\n21. BONUS",
+        "\n22. Determinar la cantidad de jugadores que hay por cada posición.",
+        "\n23. Determinar qué jugador tiene las mejores estadísticas en cada valor.",
+        "\n24. Determinar qué jugador tiene las mejores estadísticas de todos.",
+        "\n25. Mostrar la lista de jugadores ordenadas por la cantidad de All-Star de forma descendente.",
         "\n0. Finalizar programa.")
 
 
@@ -240,12 +246,12 @@ def sumar_logros(lista:list, campo_a:str, campo_b:str) -> list:
         dict_logros[campo_a] = jugador[campo_a]
         dict_logros[campo_b] = acumulador_logros
         lista_logros.append(dict_logros) 
-    lista_ordenada = buscar_mayor(lista_logros, campo_a, campo_b) 
+    lista_ordenada = buscar_mayor_menor(lista_logros, campo_a, campo_b) 
     return lista_ordenada
 
 
 
-def buscar_mayor(lista:list, campo_a:str, campo_b:str, flag_orden = False) -> list:
+def buscar_mayor_menor(lista:list, campo_a:str, campo_b:str, flag_orden = False) -> list:
     '''
     Funcion que toma el elemnto mayor de una lista y lo muestra en pantalla
     Recibe como parametro la lista de jugadores, dos strings que definen los campos a ordenar(rebotes totales, puntos totales, asistencias totales, etc),
